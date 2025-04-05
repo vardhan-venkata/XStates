@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import Dropdown from "./Dropdown";
 import "./LocationSelector.css";
 
@@ -11,55 +12,74 @@ const LocationSelector = () => {
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
+  const fetchCountries = async () => {
+    try {
+      let response = await axios.get(
+        "https://crio-location-selector.onrender.com/countries"
+      );
+      console.log("Response", response);
+      const formatted = response.data.map((name) => ({
+        key: name,
+        value: name,
+        label: name,
+      }));
+      setCountries(formatted);
+    } catch (error) {
+      console.log("Error Fetching Data : ", error);
+    }
+  };
+
+  const fetchStates = async (selectedCountry) => {
+    try {
+      let response = await axios.get(
+        `https://crio-location-selector.onrender.com/country=${selectedCountry}/states`
+      );
+      console.log("Response", response);
+      const formatted = response.data.map((name) => ({
+        key: name,
+        value: name,
+        label: name,
+      }));
+
+      setStates(formatted);
+      setSelectedState("");
+      setCities([]);
+      setSelectedCity("");
+    } catch (error) {
+      console.log("Error Fetching Data : ", error);
+    }
+  };
+  const fetchCities = async (selectedCountry, selectedState) => {
+    try {
+      let response = await axios.get(
+        `https://crio-location-selector.onrender.com/country=${selectedCountry}/state=${selectedState}/cities`
+      );
+      console.log("Response", response);
+      const formatted = response.data.map((name) => ({
+        key: name,
+        value: name,
+        label: name,
+      }));
+
+      setCities(formatted);
+      setSelectedCity("");
+    } catch (error) {
+      console.log("Error Fetching Data : ", error);
+    }
+  };
   useEffect(() => {
-    fetch("https://crio-location-selector.onrender.com/countries")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("data", data);
-        const formatted = data.map((name) => ({
-          key: name,
-          value: name,
-          label: name,
-        }));
-        setCountries(formatted);
-      });
+    fetchCountries();
   }, []);
 
   useEffect(() => {
     if (selectedCountry) {
-      fetch(
-        `https://crio-location-selector.onrender.com/country=${selectedCountry}/states`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          const formatted = data.map((name) => ({
-            key: name,
-            value: name,
-            label: name,
-          }));
-          setStates(formatted);
-          setSelectedState("");
-          setCities([]);
-          setSelectedCity("");
-        });
+      fetchStates(selectedCountry);
     }
   }, [selectedCountry]);
 
   useEffect(() => {
     if (selectedCountry && selectedState) {
-      fetch(
-        `https://crio-location-selector.onrender.com/country=${selectedCountry}/state=${selectedState}/cities`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          const formatted = data.map((name) => ({
-            key: name,
-            value: name,
-            label: name,
-          }));
-          setCities(formatted);
-          setSelectedCity("");
-        });
+      fetchCities(selectedCountry, selectedState);
     }
   }, [selectedState]);
 
